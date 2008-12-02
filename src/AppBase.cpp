@@ -24,6 +24,10 @@
 //-------------------------------
 // Collaborating Class Headers --
 //-------------------------------
+#include "MsgLogger/MsgLogger.h"
+#include "MsgLogger/MsgFormatter.h"
+#include "MsgLogger/MsgHandlerStdStreams.h"
+#include "MsgLogger/MsgLogLevel.h"
 
 //-----------------------------------------------------------------------
 // Local Macros, Typedefs, Structures, Unions and Forward Declarations --
@@ -57,9 +61,11 @@ namespace AppUtils {
 //----------------
 AppBase::AppBase ( const std::string& appName )
   : _cmdline( ::fixAppName(appName) )
-  , _optVerbose( 'v', "verbose", "verbose output, multiple allowed", 1 )
-  , _optQuiet( 'q', "quiet", "quieter output, multiple allowed", 0 )
+  , _optVerbose( 'v', "verbose", "verbose output, multiple allowed", 0 )
+  , _optQuiet( 'q', "quiet", "quieter output, multiple allowed", 2 )
 {
+  addOption( _optVerbose );
+  addOption( _optQuiet );
 }
 
 //--------------
@@ -88,6 +94,23 @@ AppBase::run ( int argc, char** argv )
     return 0 ;
   }
 
+  // setup message logger
+  MsgLogger::MsgLogLevel loglvl ( _optQuiet.value() - _optVerbose.value() ) ;
+  MsgLogger::MsgLogger rootlogger ;
+  rootlogger.setLevel ( loglvl ) ;
+
+  // Do some smart formatting of the messages
+  const char* fmt = "[%(LVL)] %(message)" ;
+  const char* errfmt = "[%(LVL)] (%(time)) %(file):%(line) - %(message)" ;
+  const char* dbgfmt = errfmt ;
+  MsgLogger::MsgFormatter::addGlobalFormat ( fmt ) ;
+  MsgLogger::MsgFormatter::addGlobalFormat ( MsgLogger::MsgLogLevel::debug, dbgfmt ) ;
+  MsgLogger::MsgFormatter::addGlobalFormat ( MsgLogger::MsgLogLevel::trace, dbgfmt ) ;
+  MsgLogger::MsgFormatter::addGlobalFormat ( MsgLogger::MsgLogLevel::warning, errfmt ) ;
+  MsgLogger::MsgFormatter::addGlobalFormat ( MsgLogger::MsgLogLevel::error, errfmt ) ;
+  MsgLogger::MsgFormatter::addGlobalFormat ( MsgLogger::MsgLogLevel::fatal, errfmt ) ;
+
+  // pre-run
   int stat = preRunApp() ;
   if ( stat != 0 ) return stat ;
 
@@ -95,6 +118,7 @@ AppBase::run ( int argc, char** argv )
   stat = this->runApp() ;
   if ( stat != 0 ) return stat ;
 
+  // clean-up
   stat = postRunApp() ;
   if ( stat != 0 ) return stat ;
 
