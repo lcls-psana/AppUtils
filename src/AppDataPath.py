@@ -14,7 +14,7 @@ one of the $SIT_DATA locations.
 
 @author Andy Salnikov
 """
-
+from __future__ import print_function
 
 #------------------------------
 #  Module's version from CVS --

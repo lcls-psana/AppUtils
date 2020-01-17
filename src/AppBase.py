@@ -19,6 +19,7 @@ Copyright (C) 2006 SLAC
 
 @author Andy Salnikov
 """
+from __future__ import print_function
 
 #------------------------------
 #  Interpreter version check --
@@ -59,7 +60,7 @@ LOGGING_TRACE_LEVEL = 15
 #---------------------
 #  Class definition --
 #---------------------
-class AppBase :
+class AppBase(object) :
 
     #--------------------
     #  Class variables --
